@@ -1,6 +1,4 @@
-# Matthew Schieber, mschieber3
-# CSE 6730: Project 1 - Preditor/Prey Simulator
-# Georgia Institute of Technology
+# By Matthew Schieber
 # Simulation Engine
 
 from heapq import heappop
