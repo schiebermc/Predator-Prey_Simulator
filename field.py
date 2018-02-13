@@ -1,6 +1,6 @@
-# Matthew Schieber, mschieber3
-# CSE 6730: Project 1 - Preditor/Prey Simulator
-# Georgia Institute of Technology
+# By Matthew Schieber
+# Application code
+# Includes event handlers, class structures, and main loop
 
 import engine
 from time import sleep
