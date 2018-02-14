@@ -15,37 +15,37 @@ import matplotlib.pyplot as plt
 ## Read-only globals ~ Simulation constants and parameters
 ################################################################################
 
-# number of events executed
-NEvents = 0
-
 # initial population sizes
 InitialRabbitCount = 30 
-InitialWolfCount   = 4 
+InitialWolfCount   = 4
 
 # days until each organism will starve (on average)
 R_Starvation = 2
-W_Starvation = 5
+W_Starvation = 6
 
 # Reproduction rates
-RabbitBreedingRate = 0.20
-WolfBreedingRate   = 0.05
-R_Repopulation = 5
+RabbitBreedingRate = 0.10
+WolfBreedingRate   = 0.01
+R_Repopulation = 6
 
 # Wolf hunting constants
 RabbitsToHunt = 0.10
 WolfCatchingRabbitRate = 0.25
 
 # days to simulate
-SimulationLength = 500
+SimulationLength = 2000
 
 # how often to record states of system
 RecordInterval = 5
 
+# Time to sleep at each record interval
+SleepTime = 0.01
+
 # size of field
-FieldSize = 500
+FieldSize = 250
 
 # model parameter!
-G = [1, 4]
+G = [3, 6]
 
 ################################################################################
 ## Data structures for events
@@ -223,7 +223,7 @@ def GrowGrass (event):
 
 def RecordState (event):
     
-    sleep(0.05)
+    sleep(SleepTime)
     global_data = event.global_data
     print('Time: ', event.timestamp, 'Rabbits: ', global_data['RabbitPopulation'].n, 'Wolves: ',
          global_data['WolfPopulation'].n, 'Grass: ', global_data['N_Grass'])
@@ -299,11 +299,13 @@ if __name__ == "__main__":
     engine.RunSim()
     EndTime = time()
 
-    x = [_ for _ in range(SimulationLength//RecordInterval+1)] 
+    x = [_*5 for _ in range(SimulationLength//RecordInterval+1)] 
     print(len(global_data['Rabbits_Data']))
     print(len(global_data['Wolves_Data']))
-    plt.plot(x, [_/10 for _ in global_data['Rabbits_Data']], 'r--', global_data['Wolves_Data'], 'bs')
+    plt.plot(x, [_/5 for _ in global_data['Rabbits_Data']], 'b--', label='N_Rabbits / 5')
+    plt.plot(x, global_data['Wolves_Data'], 'r--', label='N_Wolves')
     plt.legend()
+    plt.title('Rabbits-Wolves Population Behaviors')
     plt.show()
 
     # print final statistics
