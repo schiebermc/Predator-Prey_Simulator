@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 ################################################################################
 
 # initial population sizes
-InitialRabbitCount = 30 
-InitialWolfCount   = 4
+InitialRabbitCount = 30
+InitialWolfCount   = 4 
 
 # days until each organism will starve (on average)
 R_Starvation = 2
@@ -25,7 +25,7 @@ W_Starvation = 6
 
 # Reproduction rates
 RabbitBreedingRate = 0.10
-WolfBreedingRate   = 0.01
+WolfBreedingRate   = 0.02
 R_Repopulation = 6
 
 # Wolf hunting constants
@@ -45,7 +45,7 @@ SleepTime = 0.01
 FieldSize = 250
 
 # model parameter!
-G = [3, 6]
+G = [1, 8]
 
 ################################################################################
 ## Data structures for events
@@ -260,7 +260,10 @@ def UpdateGlobals(event):
 
 def NormalSample(mean):
 
-    return normal(loc=mean)    
+    x = 0
+    while (x <= 0):
+        x = normal(loc=mean)
+    return x
 
 ################################################################################
 # Main Loop
@@ -300,12 +303,11 @@ if __name__ == "__main__":
     EndTime = time()
 
     x = [_*5 for _ in range(SimulationLength//RecordInterval+1)] 
-    print(len(global_data['Rabbits_Data']))
-    print(len(global_data['Wolves_Data']))
     plt.plot(x, [_/5 for _ in global_data['Rabbits_Data']], 'b--', label='N_Rabbits / 5')
     plt.plot(x, global_data['Wolves_Data'], 'r--', label='N_Wolves')
     plt.legend()
-    plt.title('Rabbits-Wolves Population Behaviors')
+    title_string = 'Rabbits-Wolves Population Behaviors for G = ' + str(G)
+    plt.title(title_string)
     plt.show()
 
     # print final statistics

@@ -8,6 +8,9 @@ from time import time
 from collections import namedtuple
 import field
 
+# use heapq if true else use naive list (slow) 
+heapq = False
+
 # Future event list (priority queue)
 FEL = []
 
@@ -23,11 +26,21 @@ def CurrentTime ():
 
 # Schedule new event in FEL
 def Schedule (ts, name, global_data, event_data):
-    heappush(FEL, Event(ts, name, global_data, event_data))
+    if(heapq):
+         heappush(FEL, Event(ts, name, global_data, event_data))
+    else:
+        for ind, i in enumerate(FEL):
+            if(i.timestamp > ts):
+                FEL.insert(ind, Event(ts, name, global_data, event_data))
+                return 
+        FEL.append(Event(ts, name, global_data, event_data))
 
 # Remove smallest timestamped event from FEL, return pointer to this event
 def Remove ():
-    return heappop(FEL)
+    if(heapq):
+        return heappop(FEL)
+    else:
+        return FEL.pop(0)
 
 def RunSim (): 
     global Now
