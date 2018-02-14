@@ -1,5 +1,6 @@
 # By Matthew Schieber
 # Simulation Engine
+# All machinery is general, it merely carries out the event-driven simulation
 
 from heapq import heappop
 from heapq import heappush
@@ -7,9 +8,11 @@ from time import time
 from collections import namedtuple
 import field
 
-# Use an event structure as the header for the future event list (priority queue)
-Event = namedtuple('Event', 'timestamp event_name global_data event_data')
+# Future event list (priority queue)
 FEL = []
+
+# Event structure
+Event = namedtuple('Event', 'timestamp event_name global_data event_data')
 
 # Simulation clock variable
 Now = 0.0
