@@ -39,13 +39,13 @@ SimulationLength = 2000
 RecordInterval = 5
 
 # Time to sleep at each record interval
-SleepTime = 0.01
+SleepTime = 0.001
 
 # size of field
 FieldSize = 250
 
 # model parameter!
-G = [1, 8]
+G = [1, 1]
 
 ################################################################################
 ## Data structures for events
@@ -271,13 +271,6 @@ def NormalSample(mean):
 
 if __name__ == "__main__":
     
-#worst, medians, best = pop.solve(niters)
-
-#x = [_ for _ in range(niters)]
-#plt.plot(x, worst, 'r--', medians, 'bs', best, 'g^')
-#plt.legend()
-#plt.show()
-
     print ("Welcome to the Preditor/Prey Simulation!");
     
     # Initialize populations
@@ -302,13 +295,13 @@ if __name__ == "__main__":
     engine.RunSim()
     EndTime = time()
 
-    x = [_*5 for _ in range(SimulationLength//RecordInterval+1)] 
-    plt.plot(x, [_/5 for _ in global_data['Rabbits_Data']], 'b--', label='N_Rabbits / 5')
-    plt.plot(x, global_data['Wolves_Data'], 'r--', label='N_Wolves')
-    plt.legend()
-    title_string = 'Rabbits-Wolves Population Behaviors for G = ' + str(G)
-    plt.title(title_string)
-    plt.show()
+    #x = [_*5 for _ in range(SimulationLength//RecordInterval+1)] 
+    #plt.plot(x, [_/5 for _ in global_data['Rabbits_Data']], 'b--', label='N_Rabbits / 5')
+    #plt.plot(x, global_data['Wolves_Data'], 'r--', label='N_Wolves')
+    #plt.legend()
+    #title_string = 'Rabbits-Wolves Population Behaviors for G = ' + str(G)
+    #plt.title(title_string)
+    #plt.show()
 
     # print final statistics
     print("done! -- Events executed: ", global_data['N_Events'])
