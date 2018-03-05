@@ -9,11 +9,13 @@ from time import time
 from random import sample
 from random import randint
 from numpy.random import normal
-import matplotlib.pyplot as plt
 
 ################################################################################
 ## Read-only globals ~ Simulation constants and parameters
 ################################################################################
+
+# toggle for matplot machinery
+matplot = True
 
 # initial population sizes
 InitialRabbitCount = 30
@@ -45,7 +47,7 @@ SleepTime = 0.001
 FieldSize = 250
 
 # model parameter!
-G = [1, 1]
+G = [1, 6]
 
 ################################################################################
 ## Data structures for events
@@ -295,13 +297,15 @@ if __name__ == "__main__":
     engine.RunSim()
     EndTime = time()
 
-    #x = [_*5 for _ in range(SimulationLength//RecordInterval+1)] 
-    #plt.plot(x, [_/5 for _ in global_data['Rabbits_Data']], 'b--', label='N_Rabbits / 5')
-    #plt.plot(x, global_data['Wolves_Data'], 'r--', label='N_Wolves')
-    #plt.legend()
-    #title_string = 'Rabbits-Wolves Population Behaviors for G = ' + str(G)
-    #plt.title(title_string)
-    #plt.show()
+    if(matplot):
+        import matplotlib.pyplot as plt
+        x = [_*5 for _ in range(SimulationLength//RecordInterval+1)] 
+        plt.plot(x, [_/5 for _ in global_data['Rabbits_Data']], 'b--', label='N_Rabbits / 5')
+        plt.plot(x, global_data['Wolves_Data'], 'r--', label='N_Wolves')
+        plt.legend()
+        title_string = 'Rabbits-Wolves Population Behaviors for G = ' + str(G)
+        plt.title(title_string)
+        plt.show()
 
     # print final statistics
     print("done! -- Events executed: ", global_data['N_Events'])
