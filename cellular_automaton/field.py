@@ -26,6 +26,9 @@ from collections import namedtuple
 # printing knob, do you want to see the entire pop, or each cell pop per frame?
 print_entire_pop = True
 
+# data collection knob
+log_cells = True
+
 # initial population sizes
 InitialRabbitCount = 60
 InitialCoyoteCount   = 20 
@@ -35,7 +38,7 @@ InitialWolfCount   = 10
 # actual starvation is 2x, this is now grace period
 RabbitStarvation = 2
 CoyoteStarvation = 3
-WolfStarvation = 4
+WolfStarvation = 3
 
 # reproduction rates
 RabbitBreedingRate = 0.40
@@ -46,16 +49,20 @@ WolfBreedingRate   = 0.05
 R_Repopulation = 6
 
 # hunting constants
-CoyoteCatchingRabbitRate = 0.15
-WolfCatchingRabbitRate = 0.10
-WolfCatchingCoyoteRate = 0.05
+CoyoteCatchingRabbitRate = 0.05
+WolfCatchingRabbitRate = 0.05
+WolfCatchingCoyoteRate = 0.01
 
 # days to simulate
 SimulationLength = 100
 
 # size of NxM field 
-FieldSize_N = 10
-FieldSize_M = 10
+FieldSize_N = 50
+FieldSize_M = 50
+
+# movement distr. weights
+HungryWeight = 1
+DangerWeight = 0.01
 
 # movement distributions
 RabbitMovement = [0.025, 0.200, 0.025, 
@@ -68,8 +75,11 @@ WolfMovement   = [0.025, 0.200, 0.025,
                   0.200, 0.100, 0.200,
                   0.025, 0.200, 0.025]
 
+# how tall can it go?
+MaxGrass = 10
+
 # model parameter!
-G = [3, 2]
+G = [1, 10]
 
 ################################################################################
 ## Data structures 
@@ -99,11 +109,11 @@ class Animal(object):
             
             outcome = choice(9, 1, p=movement_distro)[0]   
             col_bump = ((outcome)  % 3) - 1
-            row_bump = ((outcome + 1) // 3) - 1
+            row_bump = ((outcome) // 3) - 1
             
             new_row = current_row + row_bump
             new_col = current_col + col_bump
-        
+ 
         return new_row, new_col
 
     def eat(self):
@@ -187,7 +197,7 @@ class CA(object):
                 sum([len(self.grid[row][col]['Wolves']) for row in range(self.n) for col in range(self.m)])]
 
 
-    def produce_movement_distribution(self, row, col, animal):
+    def produce_movement_distribution(self, row, col, animal, instance):
         # return a movement distribution for a given animal.
         # current algo: static movement distributions
         # an animal can move into any neighboring cell and is
@@ -195,14 +205,64 @@ class CA(object):
         # future work: score cells and normalize a distribution
 
         if(animal == 'Rabbits'):
-            return RabbitMovement 
+            Movement = deepcopy(RabbitMovement)
+        #    for row_bump in range(-1,2,1):
+        #        for col_bump in range(-1,2,1):
+        #            new_row = row + row_bump
+        #            new_col = col + col_bump
+        #            
+        #            if(new_row < 0 or new_row >= self.n or new_col < 0 or new_col >= self.m):
+        #                Movement[3*(row_bump+1) + (col_bump+1)] = 0.0               
+        #                continue
+
+        #            counts = self.get_cell_counts(new_row, new_col)
+        #            if (counts[2] or counts[3]):
+        #                Movement[3*row_bump + col_bump] *= DangerWeight / (counts[2] + counts[3])
+        #            elif (counts[0] and instance.hungry()):
+        #                Movement[3*row_bump + col_bump] *= HungryWeight * counts[0]
+        #    
 
         if(animal == 'Coyotes'):
-            return CoyoteMovement 
+            Movement = deepcopy(CoyoteMovement)
+        #    for row_bump in range(-1,2,1):
+        #        for col_bump in range(-1,2,1):
+        #            new_row = row + row_bump
+        #            new_col = col + col_bump
+        #             
+        #            if(new_row < 0 or new_row >= self.n or new_col < 0 or new_col >= self.m):
+        #                Movement[3*(row_bump+1) + (col_bump+1)] = 0.0               
+        #                continue
+
+        #            counts = self.get_cell_counts(new_row, new_col)
+        #            sum_counts = sum(counts)
+        #            if (counts[3]):
+        #                Movement[3*row_bump + col_bump] *= DangerWeight / (counts[3])
+        #            elif (sum_counts and instance.hungry()):
+        #                Movement[3*row_bump + col_bump] *= HungryWeight * sum_counts
+        #    
 
         if(animal == 'Wolves'):
-            return WolfMovement 
+            Movement = deepcopy(WolfMovement)
+        #    for row_bump in range(-1,2,1):
+        #        for col_bump in range(-1,2,1):
+        #            new_row = row + row_bump
+        #            new_col = col + col_bump
+        #            
+        #            if(new_row < 0 or new_row >= self.n or new_col < 0 or new_col >= self.m):
+        #                Movement[3*(row_bump+1) + (col_bump+1)] = 0.0               
+        #                continue
 
+        #            counts = self.get_cell_counts(new_row, new_col)
+        #            Movement[3*row_bump + col_bump] = HungryWeight * sum(counts)
+        #            #if ((counts[0])):
+        #            #    Movement[3*row_bump + col_bump] *= HungryWeight * (counts[0])
+        #            #if ((counts[1] or counts[2]) and instance.hungry()):
+        #            #    Movement[3*row_bump + col_bump] *= HungryWeight * (counts[1] + counts[2])
+        #    
+        
+        tots = sum(Movement)
+        Movement = [val / tots for val in Movement]
+        return Movement
 
     def automate(self):
         
@@ -217,7 +277,7 @@ class CA(object):
         if (not (self.current_frame % self.grass_seed[1])):
             for row in range(self.n):                
                 for col in range(self.m):                
-                    self.grid[row][col]['Grass'] += self.grass_seed[0] 
+                    self.grid[row][col]['Grass'] += self.grass_seed[0] if self.grid[row][col]['Grass'] < MaxGrass else 0
         
         # interactions
         for row in range(self.n):                
@@ -238,7 +298,7 @@ class CA(object):
                 new_grid[row][col]['Grass'] = self.grid[row][col]['Grass']
                 for animal in ['Rabbits', 'Coyotes', 'Wolves']:
                     for instance in self.grid[row][col][animal]:
-                        movement_distro = self.produce_movement_distribution(row, col, animal)
+                        movement_distro = self.produce_movement_distribution(row, col, animal, instance)
                         new_row, new_col = instance.move(row, col, self.n, self.m, movement_distro)
                         new_grid[new_row][new_col][animal].append(instance)
         
@@ -333,7 +393,6 @@ def interact(cell, animal):
                 cell[animal][p].dont_eat()
                 
 
-
         if(animal == 'Wolves'):
 
             if(cell[animal][p].hungry()):
@@ -361,11 +420,9 @@ def interact(cell, animal):
                     cell['Coyotes'].pop()
                     cell[animal][p].eat()
 
-            
             if(cell[animal][p].starving()):
                 del cell[animal][p]
                 p -= 1
-            
                     
         p += 1
 
@@ -384,8 +441,11 @@ if __name__ == "__main__":
     grid.init_population(InitialRabbitCount, 'Rabbits', Animal('Rabbit', RabbitStarvation, 2 *  RabbitStarvation))
     grid.init_population(InitialCoyoteCount, 'Coyotes', Animal('Coyote', CoyoteStarvation, 2 *  CoyoteStarvation))
     
+    if(log_cells):
+        wfile = open('logged_cells.txt', 'a')
+
     # main simulation loop
-    for frame in range(1, SimulationLength):
+    for frame in range(1, SimulationLength + 1):
     
         print('Frame: %d ~~~~~~~~~~~~~~~~~~~~~~~~~~' % frame)
         grid.automate()    
@@ -393,7 +453,24 @@ if __name__ == "__main__":
             print(" Grass: %d, Rabbits: %d, Coyotes: %d, Wolves: %d" % (*grid.get_entire_populations(),))
         else:
             grid.print_grid()
+
+        if(log_cells):
+            for row in range(FieldSize_N):
+                for col in range(FieldSize_N):
+                    counts = grid.get_cell_counts(row, col)
+                    outcome = 0
+                    for i in range(3, -1, -1):
+                        if(counts[i]):
+                            outcome = i + 1
+                            break
+                    wfile.write("%d %d %d\n" % (row, col, outcome))        
+                        
         print('')
+
+
+    if(log_cells):
+        wfile.close()
+
         
 
  
