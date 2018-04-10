@@ -206,59 +206,56 @@ class CA(object):
 
         if(animal == 'Rabbits'):
             Movement = deepcopy(RabbitMovement)
-        #    for row_bump in range(-1,2,1):
-        #        for col_bump in range(-1,2,1):
-        #            new_row = row + row_bump
-        #            new_col = col + col_bump
-        #            
-        #            if(new_row < 0 or new_row >= self.n or new_col < 0 or new_col >= self.m):
-        #                Movement[3*(row_bump+1) + (col_bump+1)] = 0.0               
-        #                continue
+            for row_bump in range(-1,2,1):
+                for col_bump in range(-1,2,1):
+                    new_row = row + row_bump
+                    new_col = col + col_bump
+                    
+                    if(new_row < 0 or new_row >= self.n or new_col < 0 or new_col >= self.m):
+                        Movement[3*(row_bump+1) + (col_bump+1)] = 0.0               
+                        continue
 
-        #            counts = self.get_cell_counts(new_row, new_col)
-        #            if (counts[2] or counts[3]):
-        #                Movement[3*row_bump + col_bump] *= DangerWeight / (counts[2] + counts[3])
-        #            elif (counts[0] and instance.hungry()):
-        #                Movement[3*row_bump + col_bump] *= HungryWeight * counts[0]
-        #    
+                    counts = self.get_cell_counts(new_row, new_col)
+                    if (counts[2] or counts[3]):
+                        Movement[3*row_bump + col_bump] *= DangerWeight / (counts[2] + counts[3])
+                    elif (counts[0] and instance.hungry()):
+                        Movement[3*row_bump + col_bump] *= HungryWeight * counts[0]
+            
 
         if(animal == 'Coyotes'):
             Movement = deepcopy(CoyoteMovement)
-        #    for row_bump in range(-1,2,1):
-        #        for col_bump in range(-1,2,1):
-        #            new_row = row + row_bump
-        #            new_col = col + col_bump
-        #             
-        #            if(new_row < 0 or new_row >= self.n or new_col < 0 or new_col >= self.m):
-        #                Movement[3*(row_bump+1) + (col_bump+1)] = 0.0               
-        #                continue
+            for row_bump in range(-1,2,1):
+                for col_bump in range(-1,2,1):
+                    new_row = row + row_bump
+                    new_col = col + col_bump
+                     
+                    if(new_row < 0 or new_row >= self.n or new_col < 0 or new_col >= self.m):
+                        Movement[3*(row_bump+1) + (col_bump+1)] = 0.0               
+                        continue
 
-        #            counts = self.get_cell_counts(new_row, new_col)
-        #            sum_counts = sum(counts)
-        #            if (counts[3]):
-        #                Movement[3*row_bump + col_bump] *= DangerWeight / (counts[3])
-        #            elif (sum_counts and instance.hungry()):
-        #                Movement[3*row_bump + col_bump] *= HungryWeight * sum_counts
-        #    
+                    counts = self.get_cell_counts(new_row, new_col)
+                    sum_counts = sum(counts)
+
+                    # bear and burrito theory
+                    if (counts[3]):
+                        Movement[3*row_bump + col_bump] *= DangerWeight / (counts[3])
+                    elif (sum_counts and instance.hungry()):
+                        Movement[3*row_bump + col_bump] *= HungryWeight * sum_counts
+            
 
         if(animal == 'Wolves'):
             Movement = deepcopy(WolfMovement)
-        #    for row_bump in range(-1,2,1):
-        #        for col_bump in range(-1,2,1):
-        #            new_row = row + row_bump
-        #            new_col = col + col_bump
-        #            
-        #            if(new_row < 0 or new_row >= self.n or new_col < 0 or new_col >= self.m):
-        #                Movement[3*(row_bump+1) + (col_bump+1)] = 0.0               
-        #                continue
+            for row_bump in range(-1,2,1):
+                for col_bump in range(-1,2,1):
+                    new_row = row + row_bump
+                    new_col = col + col_bump
+                    
+                    if(new_row < 0 or new_row >= self.n or new_col < 0 or new_col >= self.m):
+                        Movement[3*(row_bump+1) + (col_bump+1)] = 0.0               
+                        continue
 
-        #            counts = self.get_cell_counts(new_row, new_col)
-        #            Movement[3*row_bump + col_bump] = HungryWeight * sum(counts)
-        #            #if ((counts[0])):
-        #            #    Movement[3*row_bump + col_bump] *= HungryWeight * (counts[0])
-        #            #if ((counts[1] or counts[2]) and instance.hungry()):
-        #            #    Movement[3*row_bump + col_bump] *= HungryWeight * (counts[1] + counts[2])
-        #    
+                    counts = self.get_cell_counts(new_row, new_col)
+                    Movement[3*row_bump + col_bump] = HungryWeight * sum(counts)
         
         tots = sum(Movement)
         Movement = [val / tots for val in Movement]
