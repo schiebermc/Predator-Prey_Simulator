@@ -30,9 +30,9 @@ print_entire_pop = True
 log_cells = True
 
 # initial population sizes
-InitialRabbitCount = 60
-InitialCoyoteCount   = 20 
-InitialWolfCount   = 10
+InitialRabbitCount = 200
+InitialCoyoteCount   = 35 
+InitialWolfCount   = 30
 
 # days until each organism will starve (on average)
 # actual starvation is 2x, this is now grace period
@@ -41,7 +41,7 @@ CoyoteStarvation = 3
 WolfStarvation = 3
 
 # reproduction rates
-RabbitBreedingRate = 0.40
+RabbitBreedingRate = 0.10
 CoyoteBreedingRate = 0.05
 WolfBreedingRate   = 0.05
 
@@ -57,8 +57,8 @@ WolfCatchingCoyoteRate = 0.01
 SimulationLength = 100
 
 # size of NxM field 
-FieldSize_N = 50
-FieldSize_M = 50
+FieldSize_N = 100
+FieldSize_M = 100
 
 # movement distr. weights
 HungryWeight = 1
