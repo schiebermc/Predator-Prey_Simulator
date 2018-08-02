@@ -4,5 +4,5 @@ This repo contains simulation engines for predator-prey systems.  The customer c
 
 There are two separate simulators found in this repo, based on different conceptual models.  Each of these simulators contains its own directory:
 * event_driven : An event-driven simulator. Very efficient for large systems, but makes overarching assumptions about locality.
-* cellular-automaton : A cellular automata simulator.  A more realistic simulator which includes locality, movement, more detailed interactions, additional animals, and a modular template which will easilty allow for adding additional species to the simutor.
+* cellular-automaton : A cellular automata simulator.  A more realistic simulator which includes locality, movement, more detailed interactions, additional animals, and a modular template which will easily allow for adding additional species to the simulator.
 
