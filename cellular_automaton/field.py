@@ -2,10 +2,8 @@
 # Modeling Population dynamics using cellular automata
 
 
-# Authors:
+# Author:
 #   Matthew Schieber
-#   Jordi Wolfson-Pou
-#   Abhay Dalmia
 
 
 from time import sleep
