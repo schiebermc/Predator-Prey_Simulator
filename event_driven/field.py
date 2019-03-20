@@ -238,11 +238,10 @@ def RecordState (event):
 # Misc Utilities
 ################################################################################
 
-# rerouting function to emulate the pointer callback method
+# rerouting function to emulate a pointer callback method
 def reroute (event):
 
     name = event.event_name
-    #print(name, event.timestamp)
     if(name == 'EAT_GRASS'):
         EatGrass(event)
     elif(name == 'HUNT_RABBIT'):
