@@ -22,10 +22,13 @@ from collections import namedtuple
 ################################################################################
 
 # printing knob, do you want to see the entire pop, or each cell pop per frame?
+# True: prints the total number of each species on the grid (suggested)
+# False: prints the total number of each species in each cell on the grid
 print_entire_pop = True
 
 # data collection knob
-log_cells = True
+# FIXME let's remove this functionality for now
+#log_cells = True
 
 # initial population sizes
 InitialRabbitCount = 200
@@ -436,8 +439,9 @@ if __name__ == "__main__":
     grid.init_population(InitialRabbitCount, 'Rabbits', Animal('Rabbit', RabbitStarvation, 2 *  RabbitStarvation))
     grid.init_population(InitialCoyoteCount, 'Coyotes', Animal('Coyote', CoyoteStarvation, 2 *  CoyoteStarvation))
     
-    if(log_cells):
-        wfile = open('logged_cells.txt', 'a')
+    # FIXME let's remove this functionality for now
+    #if(log_cells):
+    #    wfile = open('logged_cells.txt', 'a')
 
     # main simulation loop
     for frame in range(1, SimulationLength + 1):
@@ -449,16 +453,17 @@ if __name__ == "__main__":
         else:
             grid.print_grid()
 
-        if(log_cells):
-            for row in range(FieldSize_N):
-                for col in range(FieldSize_N):
-                    counts = grid.get_cell_counts(row, col)
-                    outcome = 0
-                    for i in range(3, -1, -1):
-                        if(counts[i]):
-                            outcome = i + 1
-                            break
-                    wfile.write("%d %d %d\n" % (row, col, outcome))        
+        # FIXME let's remove this functionality for now
+        #if(log_cells):
+        #    for row in range(FieldSize_N):
+        #        for col in range(FieldSize_N):
+        #            counts = grid.get_cell_counts(row, col)
+        #            outcome = 0
+        #            for i in range(3, -1, -1):
+        #                if(counts[i]):
+        #                    outcome = i + 1
+        #                    break
+        #            wfile.write("%d %d %d\n" % (row, col, outcome))        
                         
         print('')
 
