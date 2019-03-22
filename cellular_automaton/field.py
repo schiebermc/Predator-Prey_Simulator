@@ -1,7 +1,6 @@
 # CSE 6730: Project 2
 # Modeling Population dynamics using cellular automata
 
-
 # Author:
 #   Matthew Schieber
 
@@ -15,6 +14,8 @@ from random import randint
 from numpy.random import normal
 from numpy.random import choice
 from collections import namedtuple
+
+from gifgen import GifCreator
 
 
 ################################################################################
@@ -58,8 +59,8 @@ WolfCatchingCoyoteRate = 0.01
 SimulationLength = 100
 
 # size of NxM field 
-FieldSize_N = 100
-FieldSize_M = 100
+FieldSize_N = 200
+FieldSize_M = 200
 
 # movement distr. weights
 HungryWeight = 1
@@ -156,7 +157,6 @@ class CA(object):
 
     def init_population(self, spawn_count, animal, new_organism):
         # initializes the grid with m organisms of type animal
-        
         # current algo: totally random drop of m animals, may not be realistic
         for spawn in range(spawn_count):
             i = randint(0, self.n-1)
@@ -166,14 +166,12 @@ class CA(object):
     
     def sum_population(self, animal):
         # returns a sum of all organisms in the field of type animal
-        
         return sum(sum([len(self.grid[row][col][animal]) for col in range(self.m)]) 
             for row in range(self.n)) 
 
 
     def print_grid(self):
         # prints grid for debugging purposes
-
         for row in range(self.n):
             for col in range(self.m):
                 print("(%d, %d) - Grass: %d, Rabbits: %d, Coyotes: %d, Wolves: %d" %
@@ -438,6 +436,8 @@ if __name__ == "__main__":
     grid.init_population(InitialWolfCount, 'Wolves', Animal('Wolf', WolfStarvation, 2 *  WolfStarvation))
     grid.init_population(InitialRabbitCount, 'Rabbits', Animal('Rabbit', RabbitStarvation, 2 *  RabbitStarvation))
     grid.init_population(InitialCoyoteCount, 'Coyotes', Animal('Coyote', CoyoteStarvation, 2 *  CoyoteStarvation))
+
+    figure_list = []
     
     # FIXME let's remove this functionality for now
     #if(log_cells):
@@ -453,6 +453,14 @@ if __name__ == "__main__":
         else:
             grid.print_grid()
 
+        image = []
+        for i in range(FieldSize_N):
+            image.append([[] for cell in range(FieldSize_M)])
+            for j in range(FieldSize_M):
+                image[i][j] = grid.get_cell_counts(i, j)
+
+        figure_list.append(image)
+        
         # FIXME let's remove this functionality for now
         #if(log_cells):
         #    for row in range(FieldSize_N):
@@ -468,9 +476,13 @@ if __name__ == "__main__":
         print('')
 
 
-    if(log_cells):
-        wfile.close()
+    #if(log_cells):
+    #    wfile.close()
 
-        
+    gc = GifCreator(figure_list, save=True, filename='giffy', rule='')
+    gc.create_fig() 
 
- 
+
+
+
+
