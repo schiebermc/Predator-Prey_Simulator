@@ -32,9 +32,9 @@ print_entire_pop = True
 generate_movie = True
 
 # initial population sizes
-InitialRabbitCount = 100
-InitialCoyoteCount   = 30 
-InitialWolfCount   = 20
+InitialRabbitCount = 1000
+InitialCoyoteCount   = 120 
+InitialWolfCount   = 100
 
 # regular intervals for reproduction
 R_Repopulation = 6
@@ -43,8 +43,8 @@ R_Repopulation = 6
 SimulationLength = 100
 
 # size of NxM field 
-FieldSize_N = 50
-FieldSize_M = 50
+FieldSize_N = 300
+FieldSize_M = 300
 
 # movement distr. weights
 HungryWeight = 1
@@ -103,7 +103,7 @@ class CA(object):
         # current algo: totally random drop of m animals, may not be realistic
         for spawn in range(spawn_count):
             i = randint(0, self.n-1)
-            j = randint(0, self.n-1)
+            j = randint(0, self.m-1)
             self.grid[i][j][animal].append(deepcopy(new_organism))
         
     
