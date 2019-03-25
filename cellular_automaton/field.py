@@ -4,7 +4,6 @@
 # Author:
 #   Matthew Schieber
 
-
 from time import sleep
 from math import ceil
 from time import time
@@ -14,9 +13,11 @@ from random import randint
 from numpy.random import normal
 from numpy.random import choice
 from collections import namedtuple
-
 from gifgen import GifCreator
 
+from zoo import Rabbit
+from zoo import Coyote
+from zoo import Wolf
 
 ################################################################################
 ## Read-only globals ~ Simulation constants and parameters
@@ -27,55 +28,27 @@ from gifgen import GifCreator
 # False: prints the total number of each species in each cell on the grid
 print_entire_pop = True
 
-# data collection knob
-# FIXME let's remove this functionality for now
-#log_cells = True
+# movie generation knob
+generate_movie = True
 
 # initial population sizes
-InitialRabbitCount = 200
-InitialCoyoteCount   = 35 
-InitialWolfCount   = 30
-
-# days until each organism will starve (on average)
-# actual starvation is 2x, this is now grace period
-RabbitStarvation = 2
-CoyoteStarvation = 3
-WolfStarvation = 3
-
-# reproduction rates
-RabbitBreedingRate = 0.10
-CoyoteBreedingRate = 0.05
-WolfBreedingRate   = 0.05
+InitialRabbitCount = 500
+InitialCoyoteCount   = 150 
+InitialWolfCount   = 100
 
 # regular intervals for reproduction
 R_Repopulation = 6
-
-# hunting constants
-CoyoteCatchingRabbitRate = 0.05
-WolfCatchingRabbitRate = 0.05
-WolfCatchingCoyoteRate = 0.01
 
 # days to simulate
 SimulationLength = 100
 
 # size of NxM field 
-FieldSize_N = 200
-FieldSize_M = 200
+FieldSize_N = 20
+FieldSize_M = 20
 
 # movement distr. weights
 HungryWeight = 1
 DangerWeight = 0.01
-
-# movement distributions
-RabbitMovement = [0.025, 0.200, 0.025, 
-                  0.200, 0.100, 0.200,
-                  0.025, 0.200, 0.025]
-CoyoteMovement = [0.025, 0.200, 0.025, 
-                  0.200, 0.100, 0.200,
-                  0.025, 0.200, 0.025]
-WolfMovement   = [0.025, 0.200, 0.025, 
-                  0.200, 0.100, 0.200,
-                  0.025, 0.200, 0.025]
 
 # how tall can it go?
 MaxGrass = 10
@@ -92,51 +65,6 @@ Cell = { 'Grass'   : 0,
          'Rabbits' : [],
          'Coyotes' : [],
          'Wolves'  : [] }
-
-# class for animals
-class Animal(object):
-
-    def __init__(self, name, r_starvation, spawn_health):
-
-        self.name = name 
-        self.r_starvation = r_starvation
-        self.days_to_starvation = spawn_health
-
-    def move(self, current_row, current_col, total_rows, total_cols, movement_distro):
-
-        new_row = -1
-        new_col = -1
-
-        while(new_row < 0 or new_row >= total_rows or new_col < 0 or new_col >= total_cols):
-            
-            outcome = choice(9, 1, p=movement_distro)[0]   
-            col_bump = ((outcome)  % 3) - 1
-            row_bump = ((outcome) // 3) - 1
-            
-            new_row = current_row + row_bump
-            new_col = current_col + col_bump
- 
-        return new_row, new_col
-
-    def eat(self):
-    
-        self.days_to_starvation = self.r_starvation * 2
-
-    def dont_eat(self):
-    
-        self.days_to_starvation -= 1
-
-    def hungry(self):
-    
-        return True if self.days_to_starvation <= self.r_starvation else False
-
-    def starving(self):
-
-        return True if self.days_to_starvation == 0 else False
-
-    def get_health(self):
-
-        return self.days_to_starvation
 
 
 # cellular automaton
@@ -263,7 +191,6 @@ class CA(object):
     def automate(self):
         
         # propogate to the next time frame
-
         # 1. growth
         # 2. mating
         # 3. interactions
@@ -279,7 +206,8 @@ class CA(object):
         for row in range(self.n):                
             for col in range(self.m):                
                 for animal in ['Rabbits', 'Coyotes', 'Wolves']:
-                    interact(self.grid[row][col], animal)        
+                    for organism in self.grid[row][col][animal]:
+                        organism.interact(self.grid[row][col])
        
         # mating
         for row in range(self.n):                
@@ -419,7 +347,7 @@ def interact(cell, animal):
             if(cell[animal][p].starving()):
                 del cell[animal][p]
                 p -= 1
-                    
+        
         p += 1
 
 
@@ -433,56 +361,39 @@ if __name__ == "__main__":
     grid = CA(FieldSize_N, FieldSize_M, Cell, G)
     
     # initialize populations
-    grid.init_population(InitialWolfCount, 'Wolves', Animal('Wolf', WolfStarvation, 2 *  WolfStarvation))
-    grid.init_population(InitialRabbitCount, 'Rabbits', Animal('Rabbit', RabbitStarvation, 2 *  RabbitStarvation))
-    grid.init_population(InitialCoyoteCount, 'Coyotes', Animal('Coyote', CoyoteStarvation, 2 *  CoyoteStarvation))
+    grid.init_population(InitialWolfCount, 'Wolves', Wolf())
+    grid.init_population(InitialRabbitCount, 'Rabbits', Rabbit())
+    grid.init_population(InitialCoyoteCount, 'Coyotes', Coyote())
 
-    figure_list = []
-    
-    # FIXME let's remove this functionality for now
-    #if(log_cells):
-    #    wfile = open('logged_cells.txt', 'a')
+    # for generating move of simulation
+    if(generate_movie):
+        figure_list = []
 
     # main simulation loop
     for frame in range(1, SimulationLength + 1):
     
-        print('Frame: %d ~~~~~~~~~~~~~~~~~~~~~~~~~~' % frame)
+        # propogate the CA
         grid.automate()    
+        
+        # print info to the terminal
+        print('Frame: %d ~~~~~~~~~~~~~~~~~~~~~~~~~~' % frame)
         if(print_entire_pop):
             print(" Grass: %d, Rabbits: %d, Coyotes: %d, Wolves: %d" % (*grid.get_entire_populations(),))
         else:
             grid.print_grid()
-
-        image = []
-        for i in range(FieldSize_N):
-            image.append([[] for cell in range(FieldSize_M)])
-            for j in range(FieldSize_M):
-                image[i][j] = grid.get_cell_counts(i, j)
-
-        figure_list.append(image)
-        
-        # FIXME let's remove this functionality for now
-        #if(log_cells):
-        #    for row in range(FieldSize_N):
-        #        for col in range(FieldSize_N):
-        #            counts = grid.get_cell_counts(row, col)
-        #            outcome = 0
-        #            for i in range(3, -1, -1):
-        #                if(counts[i]):
-        #                    outcome = i + 1
-        #                    break
-        #            wfile.write("%d %d %d\n" % (row, col, outcome))        
-                        
         print('')
 
+        # get the info of each cell on the grid and append it to image list
+        if(generate_movie):
+            image = []
+            for i in range(FieldSize_N):
+                image.append([[] for cell in range(FieldSize_M)])
+                for j in range(FieldSize_M):
+                    image[i][j] = grid.get_cell_counts(i, j)
+            figure_list.append(image)
 
-    #if(log_cells):
-    #    wfile.close()
-
-    gc = GifCreator(figure_list, save=True, filename='giffy', rule='')
-    gc.create_fig() 
-
-
-
+    if(generate_movie):
+        gc = GifCreator(figure_list, save=True, filename='giffy', rule='')
+        gc.create_fig() 
 
 

@@ -35,6 +35,7 @@ class GifCreator:
         plt.show()
 
     def get_new_grid(self, grid):
+        # make the new grids so they are NxMx3(RGB)
         colors = [(0,0,0), (51, 255, 51), (192, 192, 192), (255, 153, 51), (255, 0, 0)]
         new_grid = []
         for i, row in enumerate(grid):
@@ -45,14 +46,10 @@ class GifCreator:
                     if(val != 0):
                         num = ind+1
                 new_grid[i].append(colors[num])
-            
-        print(new_grid)
         return new_grid
                     
  
     def _create_first_frame(self):
-        #colors_lst = ['#000000', '#00ff00', '#C0C0C0', '#FF9933']#, '#FF0000']
-        #cmap = colors.ListedColormap(colors_lst)
         temp_frame = plt.imshow(self.universe[0])
         return temp_frame
 
