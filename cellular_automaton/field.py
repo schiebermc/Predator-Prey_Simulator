@@ -32,9 +32,9 @@ print_entire_pop = True
 generate_movie = True
 
 # initial population sizes
-InitialRabbitCount = 500
-InitialCoyoteCount   = 150 
-InitialWolfCount   = 100
+InitialRabbitCount = 100
+InitialCoyoteCount   = 30 
+InitialWolfCount   = 20
 
 # regular intervals for reproduction
 R_Repopulation = 6
@@ -43,8 +43,8 @@ R_Repopulation = 6
 SimulationLength = 100
 
 # size of NxM field 
-FieldSize_N = 20
-FieldSize_M = 20
+FieldSize_N = 50
+FieldSize_M = 50
 
 # movement distr. weights
 HungryWeight = 1
@@ -53,6 +53,21 @@ DangerWeight = 0.01
 # how tall can it go?
 MaxGrass = 10
 
+# reproduction rates
+RabbitBreedingRate = 0.10
+CoyoteBreedingRate = 0.05
+WolfBreedingRate   = 0.05
+
+# movement distributions
+RabbitMovement = [0.025, 0.200, 0.025, 
+                  0.200, 0.100, 0.200,
+                  0.025, 0.200, 0.025]
+CoyoteMovement = [0.025, 0.200, 0.025, 
+                  0.200, 0.100, 0.200,
+                  0.025, 0.200, 0.025]
+WolfMovement   = [0.025, 0.200, 0.025, 
+                  0.200, 0.100, 0.200,
+                  0.025, 0.200, 0.025]
 # model parameter!
 G = [1, 10]
 
@@ -109,7 +124,6 @@ class CA(object):
     def get_cell_counts(self, row, col):
         # return a list of counts of each organism within a cell
         # return order: Grass, Rabbits, Coyotes, Wolves  
- 
         return [self.grid[row][col]['Grass'], len(self.grid[row][col]['Rabbits']), 
                 len(self.grid[row][col]['Coyotes']), len(self.grid[row][col]['Wolves'])]
 
@@ -117,7 +131,6 @@ class CA(object):
     def get_entire_populations(self):
         # return a list of counts of each organism on the entire grid
         # return order: Grass, Rabbits, Coyotes, Wolves  
-
         return [sum([self.grid[row][col]['Grass'] for row in range(self.n) for col in range(self.m)]),
                 sum([len(self.grid[row][col]['Rabbits']) for row in range(self.n) for col in range(self.m)]),
                 sum([len(self.grid[row][col]['Coyotes']) for row in range(self.n) for col in range(self.m)]),
@@ -196,26 +209,39 @@ class CA(object):
         # 3. interactions
         # 4. movement
 
-        # growth
+        # 1. growth
         if (not (self.current_frame % self.grass_seed[1])):
             for row in range(self.n):                
                 for col in range(self.m):                
                     self.grid[row][col]['Grass'] += self.grass_seed[0] if self.grid[row][col]['Grass'] < MaxGrass else 0
         
-        # interactions
+        # 2. interactions
         for row in range(self.n):                
             for col in range(self.m):                
                 for animal in ['Rabbits', 'Coyotes', 'Wolves']:
                     for organism in self.grid[row][col][animal]:
                         organism.interact(self.grid[row][col])
-       
-        # mating
+
+        # check if any animal has starved to death
+        for row in range(self.n):                
+            for col in range(self.m):                
+                for animal in ['Rabbits', 'Coyotes', 'Wolves']:
+                    # we need to delete animals while iterating
+                    ind = 0
+                    while(ind != len(self.grid[row][col][animal])):
+                        if(self.grid[row][col][animal][ind].starving()):
+                            self.grid[row][col][animal].pop(ind)
+                        else:
+                            ind += 1
+
+        # 3. mating
         for row in range(self.n):                
             for col in range(self.m):                
                 for animal in ['Rabbits', 'Coyotes', 'Wolves']:
                     repopulate(self.grid[row][col][animal], animal)        
 
-        # movement (this is expensive, lots of copying)
+        # 4. movement 
+        # (this is expensive, lots of copying)
         new_grid = deepcopy(self.initial_grid)
         for row in range(self.n):
             for col in range(self.m): 
@@ -239,7 +265,7 @@ class CA(object):
 def repopulate(arr, animal):
     # repopulate an animal population within a cell 
     # given list arr is the current population of animal within a cell
-    # the new spawn will start with the minimum hunger level of current animals
+    # the new spawn will start with the MINIMUM hunger level of current animals
 
     current_count = len(arr)
     average_health = 0 if current_count == 0 else min([a.get_health() for a in arr])
@@ -249,107 +275,18 @@ def repopulate(arr, animal):
         if(animal == 'Rabbits'):
             to_add = ceil(current_count * RabbitBreedingRate)
             for spawn in range(to_add):
-                arr.append(Animal('Rabbit', RabbitStarvation, average_health))
+                arr.append(Rabbit(average_health))
 
         if(animal == 'Coyotes'):
             to_add = ceil(current_count * CoyoteBreedingRate)
             for spawn in range(to_add):
-                arr.append(Animal('Coyote', CoyoteStarvation, average_health))
+                arr.append(Coyote(average_health))
 
         if(animal == 'Wolves'):
             to_add = ceil(current_count * WolfBreedingRate)
             for spawn in range(to_add):
-                arr.append(Animal('Wolf', WolfStarvation, average_health))
+                arr.append(Wolf(average_health))
     
-
-def interact(cell, animal):
-    # all animal interactions, mostly feeding and hunting
-    # 1. Rabbits eat
-    # 2. Coyotes hunt Rabbits
-    # 3. Wolves hunt Rabbits
-    # 4. Wolves hunt Coyotes    
-    
-    p = 0
-    while(p != len(cell[animal])):
-
-        if(animal == 'Rabbits'):
-        
-            if(cell[animal][p].hungry()):
-
-                if(cell['Grass']):
-            
-                    cell['Grass'] -= 1
-                    cell[animal][p].eat()
-        
-                else:
-        
-                    cell[animal][p].dont_eat()
-                    if(cell[animal][p].starving()):
-                        del cell[animal][p]
-                        p -= 1
-
-            else:
-                cell[animal][p].dont_eat()
-
-
-        if(animal == 'Coyotes'):
-
-            if(cell[animal][p].hungry()):
-
-                successful_hunt = False
-                for hunt in range(len(cell['Rabbits'])):
-                    outcome = randint(1, int(1 / CoyoteCatchingRabbitRate)) 
-                    if(outcome == True):
-                        successful_hunt = True 
-                        break
-                
-                if(successful_hunt):
-                    cell['Rabbits'].pop()
-                    cell[animal][p].eat()
-                    
-                else:
-                    cell[animal][p].dont_eat()
-                    if(cell[animal][p].starving()):
-                        del cell[animal][p]
-                        p -= 1
-
-            else:
-                cell[animal][p].dont_eat()
-                
-
-        if(animal == 'Wolves'):
-
-            if(cell[animal][p].hungry()):
-
-                successful_hunt = False
-                for hunt in range(len(cell['Rabbits'])):
-                    outcome = randint(1, int(1 / WolfCatchingRabbitRate)) 
-                    if(outcome == True):
-                        successful_hunt = True 
-                        cell['Rabbits'].pop()
-                        break
-                
-                if(successful_hunt):
-                    cell[animal][p].eat()
-                    
-                else:
-                    cell[animal][p].dont_eat()
-
-            else:    
-                cell[animal][p].dont_eat()
-            
-            for hunt in range(len(cell['Coyotes'])):
-                outcome = randint(1, int(1 / WolfCatchingCoyoteRate)) 
-                if(outcome == True):
-                    cell['Coyotes'].pop()
-                    cell[animal][p].eat()
-
-            if(cell[animal][p].starving()):
-                del cell[animal][p]
-                p -= 1
-        
-        p += 1
-
 
 ################################################################################
 ## main simulation loop

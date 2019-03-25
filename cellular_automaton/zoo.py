@@ -1,30 +1,17 @@
 
-# movement distributions
-RabbitMovement = [0.025, 0.200, 0.025, 
-                  0.200, 0.100, 0.200,
-                  0.025, 0.200, 0.025]
-CoyoteMovement = [0.025, 0.200, 0.025, 
-                  0.200, 0.100, 0.200,
-                  0.025, 0.200, 0.025]
-WolfMovement   = [0.025, 0.200, 0.025, 
-                  0.200, 0.100, 0.200,
-                  0.025, 0.200, 0.025]
+from random import randint
+from numpy.random import choice
 
 # hunting constants
 CoyoteCatchingRabbitRate = 0.05
 WolfCatchingRabbitRate = 0.02
-WolfCatchingCoyoteRate = 0.01
+WolfCatchingCoyoteRate = 0.01 
 
 # days until each organism will starve (on average)
 # actual starvation is 2x, this is now grace period
 RabbitStarvation = 2
 CoyoteStarvation = 3
 WolfStarvation = 4
-
-# reproduction rates
-RabbitBreedingRate = 0.10
-CoyoteBreedingRate = 0.05
-WolfBreedingRate   = 0.05
 
 class Animal(object):
 
@@ -52,6 +39,7 @@ class Animal(object):
         return new_row, new_col
 
     def eat(self):
+        #print("a %s is eating" % self.name)
         self.days_to_starvation = self.r_starvation * 2
 
     def dont_eat(self):
@@ -69,26 +57,83 @@ class Animal(object):
 
 class Rabbit(Animal):
 
-    def __init__(self):
-        Animal.__init__(self, 'Rabbit', RabbitStarvation, 2*RabbitStarvation) 
+    def __init__(self, health=2*RabbitStarvation):
+        Animal.__init__(self, 'Rabbit', RabbitStarvation, health) 
 
     def interact(self, cell):
 
+        if(self.hungry()):
+            
+            if(cell['Grass']):
+                cell['Grass'] -= 1
+                self.eat()
+            
+            else:
+                self.dont_eat() 
 
+        else:
+            self.dont_eat()
+
+                
 class Coyote(Animal):
 
-    def __init__(self):
-        Animal.__init__(self, 'Coyote', CoyoteStarvation, 2*CoyoteStarvation) 
+    def __init__(self, health=2*CoyoteStarvation):
+        Animal.__init__(self, 'Coyote', CoyoteStarvation, health) 
 
     
     def interact(self, cell):
 
+        if(self.hungry()):
+
+            successful_hunt = False
+            for hunt in range(len(cell['Rabbits'])):
+                outcome = randint(1, int(1 / CoyoteCatchingRabbitRate)) 
+                if(outcome == True):
+                    successful_hunt = True 
+                    break
+            
+            if(successful_hunt):
+                cell['Rabbits'].pop() # just pop the last one. it didnt' matter
+                self.eat()
+                
+            else:
+                self.dont_eat()
+
+        else:
+            self.dont_eat()
+            
 
 class Wolf(Animal):
 
-    def __init__(self):
-        Animal.__init__(self, 'Wolf', WolfStarvation, 2*WolfStarvation) 
+    def __init__(self, health=2*WolfStarvation):
+        Animal.__init__(self, 'Wolf', WolfStarvation, health) 
 
     def interact(self, cell):
+        
+        if(self.hungry()):
+
+            successful_hunt = False
+            for hunt in range(len(cell['Rabbits'])):
+                outcome = randint(1, int(1 / WolfCatchingRabbitRate)) 
+                if(outcome == 1):
+                    successful_hunt = True 
+                    break
+        
+            if(successful_hunt):
+                cell['Rabbits'].pop() # just pop the last one. it didnt' matter
+                self.eat()
+                
+            else:
+                self.dont_eat()
+        
+        else:    
+            self.dont_eat()
+
+        for hunt in range(len(cell['Coyotes'])):
+            outcome = randint(1, int(1 / WolfCatchingCoyoteRate)) 
+            if(outcome == 1):
+                cell['Coyotes'].pop() # this is effective, right..?
+                self.eat()
+
 
 
