@@ -7,3 +7,4 @@ There are two separate simulators found in this repo, based on different concept
 * cellular-automaton : A cellular automata simulator.  A more realistic simulator which includes locality, movement, more detailed interactions, additional animals, and a modular template which will easily allow for adding additional species to the simulator.
 
 ![](cellular_automaton/forest100by100.gif)
+![](cellular_automaton/forest400by400.gif)
