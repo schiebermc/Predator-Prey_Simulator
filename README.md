@@ -6,3 +6,4 @@ There are two separate simulators found in this repo, based on different concept
 * event_driven : An event-driven simulator. Very efficient for large systems, but makes overarching assumptions about locality.
 * cellular-automaton : A cellular automata simulator.  A more realistic simulator which includes locality, movement, more detailed interactions, additional animals, and a modular template which will easily allow for adding additional species to the simulator.
 
+![](cellular_automaton/forest100by100.gif)
