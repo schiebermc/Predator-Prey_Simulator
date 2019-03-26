@@ -32,9 +32,9 @@ print_entire_pop = True
 generate_movie = True
 
 # initial population sizes
-InitialRabbitCount = 1000
-InitialCoyoteCount   = 120 
-InitialWolfCount   = 100
+InitialRabbitCount = 100
+InitialCoyoteCount   = 20 
+InitialWolfCount   = 20
 
 # regular intervals for reproduction
 R_Repopulation = 6
@@ -43,18 +43,18 @@ R_Repopulation = 6
 SimulationLength = 100
 
 # size of NxM field 
-FieldSize_N = 300
-FieldSize_M = 300
+FieldSize_N = 100
+FieldSize_M = 100
 
 # movement distr. weights
 HungryWeight = 1
 DangerWeight = 0.01
 
 # how tall can it go?
-MaxGrass = 10
+MaxGrass = 2
 
 # reproduction rates
-RabbitBreedingRate = 0.10
+RabbitBreedingRate = 0.20
 CoyoteBreedingRate = 0.05
 WolfBreedingRate   = 0.05
 
@@ -77,9 +77,9 @@ G = [1, 10]
 
 # cell structures (dicts will be easier)
 Cell = { 'Grass'   : 0,
-         'Rabbits' : [],
-         'Coyotes' : [],
-         'Wolves'  : [] }
+         'Rabbit' : [],
+         'Coyote' : [],
+         'Wolf'  : [] }
 
 
 # cellular automaton
@@ -117,24 +117,24 @@ class CA(object):
         # prints grid for debugging purposes
         for row in range(self.n):
             for col in range(self.m):
-                print("(%d, %d) - Grass: %d, Rabbits: %d, Coyotes: %d, Wolves: %d" %
+                print("(%d, %d) - Grass: %d, Rabbit: %d, Coyote: %d, Wolf: %d" %
                      (row, col, *self.get_cell_counts(row, col)))
 
 
     def get_cell_counts(self, row, col):
         # return a list of counts of each organism within a cell
-        # return order: Grass, Rabbits, Coyotes, Wolves  
-        return [self.grid[row][col]['Grass'], len(self.grid[row][col]['Rabbits']), 
-                len(self.grid[row][col]['Coyotes']), len(self.grid[row][col]['Wolves'])]
+        # return order: Grass, Rabbit, Coyote, Wolf  
+        return [self.grid[row][col]['Grass'], len(self.grid[row][col]['Rabbit']), 
+                len(self.grid[row][col]['Coyote']), len(self.grid[row][col]['Wolf'])]
 
 
     def get_entire_populations(self):
         # return a list of counts of each organism on the entire grid
-        # return order: Grass, Rabbits, Coyotes, Wolves  
+        # return order: Grass, Rabbit, Coyote, Wolf  
         return [sum([self.grid[row][col]['Grass'] for row in range(self.n) for col in range(self.m)]),
-                sum([len(self.grid[row][col]['Rabbits']) for row in range(self.n) for col in range(self.m)]),
-                sum([len(self.grid[row][col]['Coyotes']) for row in range(self.n) for col in range(self.m)]),
-                sum([len(self.grid[row][col]['Wolves']) for row in range(self.n) for col in range(self.m)])]
+                sum([len(self.grid[row][col]['Rabbit']) for row in range(self.n) for col in range(self.m)]),
+                sum([len(self.grid[row][col]['Coyote']) for row in range(self.n) for col in range(self.m)]),
+                sum([len(self.grid[row][col]['Wolf']) for row in range(self.n) for col in range(self.m)])]
 
 
     def produce_movement_distribution(self, row, col, animal, instance):
@@ -144,7 +144,7 @@ class CA(object):
         # agnostic to danger, food, or reproductive advantages
         # future work: score cells and normalize a distribution
 
-        if(animal == 'Rabbits'):
+        if(animal == 'Rabbit'):
             Movement = deepcopy(RabbitMovement)
             for row_bump in range(-1,2,1):
                 for col_bump in range(-1,2,1):
@@ -162,7 +162,7 @@ class CA(object):
                         Movement[3*row_bump + col_bump] *= HungryWeight * counts[0]
             
 
-        if(animal == 'Coyotes'):
+        if(animal == 'Coyote'):
             Movement = deepcopy(CoyoteMovement)
             for row_bump in range(-1,2,1):
                 for col_bump in range(-1,2,1):
@@ -183,7 +183,7 @@ class CA(object):
                         Movement[3*row_bump + col_bump] *= HungryWeight * sum_counts
             
 
-        if(animal == 'Wolves'):
+        if(animal == 'Wolf'):
             Movement = deepcopy(WolfMovement)
             for row_bump in range(-1,2,1):
                 for col_bump in range(-1,2,1):
@@ -218,14 +218,14 @@ class CA(object):
         # 2. interactions
         for row in range(self.n):                
             for col in range(self.m):                
-                for animal in ['Rabbits', 'Coyotes', 'Wolves']:
+                for animal in ['Rabbit', 'Coyote', 'Wolf']:
                     for organism in self.grid[row][col][animal]:
                         organism.interact(self.grid[row][col])
 
         # check if any animal has starved to death
         for row in range(self.n):                
             for col in range(self.m):                
-                for animal in ['Rabbits', 'Coyotes', 'Wolves']:
+                for animal in ['Rabbit', 'Coyote', 'Wolf']:
                     # we need to delete animals while iterating
                     ind = 0
                     while(ind != len(self.grid[row][col][animal])):
@@ -237,7 +237,7 @@ class CA(object):
         # 3. mating
         for row in range(self.n):                
             for col in range(self.m):                
-                for animal in ['Rabbits', 'Coyotes', 'Wolves']:
+                for animal in ['Rabbit', 'Coyote', 'Wolf']:
                     repopulate(self.grid[row][col][animal], animal)        
 
         # 4. movement 
@@ -246,7 +246,7 @@ class CA(object):
         for row in range(self.n):
             for col in range(self.m): 
                 new_grid[row][col]['Grass'] = self.grid[row][col]['Grass']
-                for animal in ['Rabbits', 'Coyotes', 'Wolves']:
+                for animal in ['Rabbit', 'Coyote', 'Wolf']:
                     for instance in self.grid[row][col][animal]:
                         movement_distro = self.produce_movement_distribution(row, col, animal, instance)
                         new_row, new_col = instance.move(row, col, self.n, self.m, movement_distro)
@@ -268,21 +268,21 @@ def repopulate(arr, animal):
     # the new spawn will start with the MINIMUM hunger level of current animals
 
     current_count = len(arr)
-    average_health = 0 if current_count == 0 else min([a.get_health() for a in arr])
+    average_health = 0 if current_count == 0 else max([a.get_health() for a in arr])
 
     if(average_health > 0):
 
-        if(animal == 'Rabbits'):
+        if(animal == 'Rabbit'):
             to_add = ceil(current_count * RabbitBreedingRate)
             for spawn in range(to_add):
                 arr.append(Rabbit(average_health))
 
-        if(animal == 'Coyotes'):
+        if(animal == 'Coyote'):
             to_add = ceil(current_count * CoyoteBreedingRate)
             for spawn in range(to_add):
                 arr.append(Coyote(average_health))
 
-        if(animal == 'Wolves'):
+        if(animal == 'Wolf'):
             to_add = ceil(current_count * WolfBreedingRate)
             for spawn in range(to_add):
                 arr.append(Wolf(average_health))
@@ -298,9 +298,9 @@ if __name__ == "__main__":
     grid = CA(FieldSize_N, FieldSize_M, Cell, G)
     
     # initialize populations
-    grid.init_population(InitialWolfCount, 'Wolves', Wolf())
-    grid.init_population(InitialRabbitCount, 'Rabbits', Rabbit())
-    grid.init_population(InitialCoyoteCount, 'Coyotes', Coyote())
+    grid.init_population(InitialWolfCount, 'Wolf', Wolf())
+    grid.init_population(InitialRabbitCount, 'Rabbit', Rabbit())
+    grid.init_population(InitialCoyoteCount, 'Coyote', Coyote())
 
     # for generating move of simulation
     if(generate_movie):
@@ -315,7 +315,7 @@ if __name__ == "__main__":
         # print info to the terminal
         print('Frame: %d ~~~~~~~~~~~~~~~~~~~~~~~~~~' % frame)
         if(print_entire_pop):
-            print(" Grass: %d, Rabbits: %d, Coyotes: %d, Wolves: %d" % (*grid.get_entire_populations(),))
+            print(" Grass: %d, Rabbit: %d, Coyote: %d, Wolf: %d" % (*grid.get_entire_populations(),))
         else:
             grid.print_grid()
         print('')

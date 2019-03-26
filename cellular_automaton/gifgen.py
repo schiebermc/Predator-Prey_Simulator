@@ -10,15 +10,15 @@ import matplotlib.pyplot as plt
 class GifCreator:
     def __init__(self, universe, save=False, filename='', rule=''):
         """
-        :param universe:is a list of grids (numpy arrays originally)
+        :param universe: a list of grids (numpy arrays originally)
         :param save: False or True to save
         :param filename:
         """
-            
         self.universe = [self.get_new_grid(grid) for grid in universe]
         self.save = save
         self.filename = filename
         self.rule = rule
+
 
     def create_fig(self):
         fig, ax = plt.subplots(figsize=(10, 10))
@@ -33,6 +33,7 @@ class GifCreator:
             anim.save(self.filename + '.html', fps=10, writer='imagemagick')
         plt.draw()
         plt.show()
+
 
     def get_new_grid(self, grid):
         # make the new grids so they are NxMx3(RGB)
