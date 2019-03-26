@@ -2,21 +2,30 @@
 from random import randint
 from numpy.random import choice
 
-# hunting constants
-CoyoteCatchingRabbitRate = 0.05
-WolfCatchingRabbitRate = 0.02
-WolfCatchingCoyoteRate = 0.01 
-
 # days until each organism will starve (on average)
 # actual starvation is 2x, this is now grace period
-RabbitStarvation = 2
-CoyoteStarvation = 3
-WolfStarvation = 4
+STARVATION_RATES = {"Rabbit" : 1,
+                    "Coyote" : 2,
+                    "Wolf"   : 3
+                    }
 
-class Animal(object):
+# lists of foods for each herbivore
+HERBIVORE_EATING_LIST = {"Rabbit" : ['Grass'] }
+
+# rates at which predators can catch and kill a prey
+PREY_HUNTING_RATES = {"Coyote" : [["Rabbit", 0.15]],
+                      "Wolf"   : [["Rabbit", 0.1]]}
+
+# rates at which predators can chase and kill a prey
+COMPETITION_HUNTING_RATES = {"Coyote" : [],
+                             "Wolf" : [["Coyote", 0.01]]}
+
+
+class Animal():
 
     # base class for animals
     # the essential stuff that all animals do
+    # eat, move
 
     def __init__(self, name, r_starvation, spawn_health):
 
@@ -39,7 +48,6 @@ class Animal(object):
         return new_row, new_col
 
     def eat(self):
-        #print("a %s is eating" % self.name)
         self.days_to_starvation = self.r_starvation * 2
 
     def dont_eat(self):
@@ -55,12 +63,61 @@ class Animal(object):
         return self.days_to_starvation
 
 
-class Rabbit(Animal):
+class Carnivore(Animal):
 
-    def __init__(self, health=2*RabbitStarvation):
-        Animal.__init__(self, 'Rabbit', RabbitStarvation, health) 
+    def __init__(self, name, r_starvation, spawn_health, prey, competition):
+    
+        self.prey = prey
+        self.competition = competition
+        Animal.__init__(self, name, r_starvation, spawn_health) 
 
-    def interact(self, cell):
+    def hunt_prey(self, cell):
+        
+        # hunt each type of prey in the current cell
+        # TODO add neighborhood cells for hunting?
+        for animal, hunting_rate in self.prey:
+
+            successful_hunt = False
+            for hunt in range(len(cell[animal])):
+                outcome = randint(1, int(1 / hunting_rate)) 
+                if(outcome == True):
+                    successful_hunt = True 
+                    break
+            
+            # if a hunt was successful, stop hunting, time to
+            # rest up a fully belly
+            if(successful_hunt):
+                cell[animal].pop() 
+                self.eat()
+                break
+                
+        # hunting is exhausting, so failure results in lost health
+        if(not successful_hunt):
+            self.dont_eat()
+
+
+    def chase_competition(self, cell):
+
+        # if there is an animal in the competition list, this is
+        # deemed as a more alpha carnivore. There is a chance this
+        # carnivore will kill some of the compeition
+        for animal, hunting_rate in self.competition:
+            for hunt in range(len(cell[animal])):
+                outcome = randint(1, int(1 / hunting_rate)) 
+                if(outcome == 1):
+                    cell[animal].pop() 
+                    self.eat()
+
+
+class Herbivore(Animal):
+
+    def __init__(self, name, r_starvation, spawn_health, prey):
+    
+        self.prey = prey
+        Animal.__init__(self, name, r_starvation, spawn_health) 
+
+
+    def find_and_eat_food(self, cell):
 
         if(self.hungry()):
             
@@ -73,67 +130,64 @@ class Rabbit(Animal):
 
         else:
             self.dont_eat()
+        
 
-                
-class Coyote(Animal):
+class Rabbit(Herbivore):
 
-    def __init__(self, health=2*CoyoteStarvation):
-        Animal.__init__(self, 'Coyote', CoyoteStarvation, health) 
+    def __init__(self, health=2*STARVATION_RATES["Rabbit"]):
 
-    
+        Herbivore.__init__(self, 'Rabbit', STARVATION_RATES["Rabbit"], 
+                            health, HERBIVORE_EATING_LIST["Rabbit"])
+   
+ 
     def interact(self, cell):
 
-        if(self.hungry()):
+        self.find_and_eat_food(cell)
 
-            successful_hunt = False
-            for hunt in range(len(cell['Rabbits'])):
-                outcome = randint(1, int(1 / CoyoteCatchingRabbitRate)) 
-                if(outcome == True):
-                    successful_hunt = True 
-                    break
-            
-            if(successful_hunt):
-                cell['Rabbits'].pop() # just pop the last one. it didnt' matter
-                self.eat()
                 
-            else:
-                self.dont_eat()
+class Coyote(Carnivore):
 
-        else:
-            self.dont_eat()
-            
+    def __init__(self, health=2*STARVATION_RATES["Coyote"]):
 
-class Wolf(Animal):
-
-    def __init__(self, health=2*WolfStarvation):
-        Animal.__init__(self, 'Wolf', WolfStarvation, health) 
+        Carnivore.__init__(self, 'Coyote', 
+                            STARVATION_RATES["Coyote"],
+                            health,
+                            PREY_HUNTING_RATES["Coyote"],
+                            COMPETITION_HUNTING_RATES["Coyote"])
 
     def interact(self, cell):
-        
-        if(self.hungry()):
 
-            successful_hunt = False
-            for hunt in range(len(cell['Rabbits'])):
-                outcome = randint(1, int(1 / WolfCatchingRabbitRate)) 
-                if(outcome == 1):
-                    successful_hunt = True 
-                    break
-        
-            if(successful_hunt):
-                cell['Rabbits'].pop() # just pop the last one. it didnt' matter
-                self.eat()
-                
-            else:
-                self.dont_eat()
-        
-        else:    
-            self.dont_eat()
+        self.hunt_prey(cell)
+        self.chase_competition(cell)        
 
-        for hunt in range(len(cell['Coyotes'])):
-            outcome = randint(1, int(1 / WolfCatchingCoyoteRate)) 
-            if(outcome == 1):
-                cell['Coyotes'].pop() # this is effective, right..?
-                self.eat()
+
+class Wolf(Carnivore):
+
+    def __init__(self, health=2*STARVATION_RATES["Wolf"]):
+
+        Carnivore.__init__(self, 'Wolf', 
+                            STARVATION_RATES["Wolf"],
+                            health,
+                            PREY_HUNTING_RATES["Wolf"],
+                            COMPETITION_HUNTING_RATES["Wolf"])
+
+    def interact(self, cell):
+
+        self.hunt_prey(cell)
+        self.chase_competition(cell)        
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

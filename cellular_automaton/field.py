@@ -14,7 +14,7 @@ from numpy.random import normal
 from numpy.random import choice
 from collections import namedtuple
 from gifgen import GifCreator
-
+from functools import reduce
 from zoo import Rabbit
 from zoo import Coyote
 from zoo import Wolf
@@ -32,9 +32,9 @@ print_entire_pop = True
 generate_movie = True
 
 # initial population sizes
-InitialRabbitCount = 100
-InitialCoyoteCount   = 20 
-InitialWolfCount   = 20
+InitialRabbitCount = 200
+InitialCoyoteCount   = 50 
+InitialWolfCount   = 50
 
 # regular intervals for reproduction
 R_Repopulation = 6
@@ -43,8 +43,8 @@ R_Repopulation = 6
 SimulationLength = 100
 
 # size of NxM field 
-FieldSize_N = 100
-FieldSize_M = 100
+FieldSize_N = 300
+FieldSize_M = 300
 
 # movement distr. weights
 HungryWeight = 1
@@ -59,17 +59,30 @@ CoyoteBreedingRate = 0.05
 WolfBreedingRate   = 0.05
 
 # movement distributions
-RabbitMovement = [0.025, 0.200, 0.025, 
-                  0.200, 0.100, 0.200,
-                  0.025, 0.200, 0.025]
-CoyoteMovement = [0.025, 0.200, 0.025, 
-                  0.200, 0.100, 0.200,
-                  0.025, 0.200, 0.025]
-WolfMovement   = [0.025, 0.200, 0.025, 
-                  0.200, 0.100, 0.200,
-                  0.025, 0.200, 0.025]
+MOVEMENT_DISTRIBUTIONS = {
+    "Rabbit" :  [[0.025, 0.200, 0.025], 
+                 [0.200, 0.100, 0.200],
+                 [0.025, 0.200, 0.025]],
+                
+    "Coyote" :  [[0.025, 0.200, 0.025], 
+                 [0.200, 0.100, 0.200],
+                 [0.025, 0.200, 0.025]],
+
+    "Wolf"   :  [[0.025, 0.200, 0.025], 
+                 [0.200, 0.100, 0.200],
+                 [0.025, 0.200, 0.025]]
+                        }
+
+PREDATORS_OF = {"Rabbit" : ["Coyote", "Wolf"],
+                "Coyote" : ["Wolf"],
+                "Wolf"   : []}
+
+PREY_OF =     {"Rabbit" : ["Grass"],
+                "Coyote" : ["Rabbit"],
+                "Wolf"   : ["Rabbit", "Coyote"]}
+
 # model parameter!
-G = [1, 10]
+G = [1, 20]
 
 ################################################################################
 ## Data structures 
@@ -80,7 +93,6 @@ Cell = { 'Grass'   : 0,
          'Rabbit' : [],
          'Coyote' : [],
          'Wolf'  : [] }
-
 
 # cellular automaton
 class CA(object):
@@ -128,6 +140,18 @@ class CA(object):
                 len(self.grid[row][col]['Coyote']), len(self.grid[row][col]['Wolf'])]
 
 
+    def get_cell_counts_dict(self, row, col):
+        # return a dict of counts of each organism within a cell
+        counts = {}
+        for species, val in self.grid[row][col].items():
+            if(isinstance(val, int)):
+                counts[species] = val
+            elif(isinstance(val, list)):
+                counts[species] = len(val)
+            else:
+                raise Exception("this shouldn't happen")
+        return counts
+
     def get_entire_populations(self):
         # return a list of counts of each organism on the entire grid
         # return order: Grass, Rabbit, Coyote, Wolf  
@@ -143,63 +167,40 @@ class CA(object):
         # an animal can move into any neighboring cell and is
         # agnostic to danger, food, or reproductive advantages
         # future work: score cells and normalize a distribution
+        # none of the discription is true anymore             
+       
+        movement = deepcopy(MOVEMENT_DISTRIBUTIONS[animal])
+        for row_bump in range(-1,2,1):
+            for col_bump in range(-1,2,1):
+                new_row = row + row_bump
+                new_col = col + col_bump
+                
+                # not possible to move to this cell, set p(cell) = 0.0
+                if(new_row < 0 or new_row >= self.n or new_col < 0 or new_col >= self.m):
+                    movement[row_bump][col_bump] = 0.0
+                    continue
 
-        if(animal == 'Rabbit'):
-            Movement = deepcopy(RabbitMovement)
-            for row_bump in range(-1,2,1):
-                for col_bump in range(-1,2,1):
-                    new_row = row + row_bump
-                    new_col = col + col_bump
-                    
-                    if(new_row < 0 or new_row >= self.n or new_col < 0 or new_col >= self.m):
-                        Movement[3*(row_bump+1) + (col_bump+1)] = 0.0               
-                        continue
-
-                    counts = self.get_cell_counts(new_row, new_col)
-                    if (counts[2] or counts[3]):
-                        Movement[3*row_bump + col_bump] *= DangerWeight / (counts[2] + counts[3])
-                    elif (counts[0] and instance.hungry()):
-                        Movement[3*row_bump + col_bump] *= HungryWeight * counts[0]
-            
-
-        if(animal == 'Coyote'):
-            Movement = deepcopy(CoyoteMovement)
-            for row_bump in range(-1,2,1):
-                for col_bump in range(-1,2,1):
-                    new_row = row + row_bump
-                    new_col = col + col_bump
-                     
-                    if(new_row < 0 or new_row >= self.n or new_col < 0 or new_col >= self.m):
-                        Movement[3*(row_bump+1) + (col_bump+1)] = 0.0               
-                        continue
-
-                    counts = self.get_cell_counts(new_row, new_col)
-                    sum_counts = sum(counts)
-
-                    # bear and burrito theory
-                    if (counts[3]):
-                        Movement[3*row_bump + col_bump] *= DangerWeight / (counts[3])
-                    elif (sum_counts and instance.hungry()):
-                        Movement[3*row_bump + col_bump] *= HungryWeight * sum_counts
-            
-
-        if(animal == 'Wolf'):
-            Movement = deepcopy(WolfMovement)
-            for row_bump in range(-1,2,1):
-                for col_bump in range(-1,2,1):
-                    new_row = row + row_bump
-                    new_col = col + col_bump
-                    
-                    if(new_row < 0 or new_row >= self.n or new_col < 0 or new_col >= self.m):
-                        Movement[3*(row_bump+1) + (col_bump+1)] = 0.0               
-                        continue
-
-                    counts = self.get_cell_counts(new_row, new_col)
-                    Movement[3*row_bump + col_bump] = HungryWeight * sum(counts)
+                counts = self.get_cell_counts_dict(new_row, new_col)
+                
+                # the goal here is to increase the goodness of a cell 
+                # depending on whether the cell contains food or danger
+                # elif is added to avoid food if the cell is dangerous
+                nprey = sum([counts[prey] for prey in PREY_OF[animal]])
+                npredators = sum([counts[predator] for predator in PREDATORS_OF[animal]])
+                if (npredators):
+                    movement[row_bump][col_bump] *= DangerWeight / (npredators)
+                
+                elif (nprey and instance.hungry()):
+                    movement[row_bump][col_bump] *= HungryWeight * nprey
         
-        tots = sum(Movement)
-        Movement = [val / tots for val in Movement]
-        return Movement
+        # normalize the distribution and return
+        tots = sum([sum(row) for row in movement])
+        movement = [[val / tots for val in row] for row in movement]
+        
+        # unroll the matrix and return
+        movement = reduce(lambda x, y : x+y, movement)
+        return movement
+
 
     def automate(self):
         
@@ -210,7 +211,7 @@ class CA(object):
         # 4. movement
 
         # 1. growth
-        if (not (self.current_frame % self.grass_seed[1])):
+        if (self.current_frame % self.grass_seed[1] == 0):
             for row in range(self.n):                
                 for col in range(self.m):                
                     self.grid[row][col]['Grass'] += self.grass_seed[0] if self.grid[row][col]['Grass'] < MaxGrass else 0
