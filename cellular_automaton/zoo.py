@@ -4,9 +4,9 @@ from numpy.random import choice
 
 # days until each organism will starve (on average)
 # actual starvation is 2x, this is now grace period
-STARVATION_RATES = {"Rabbit" : 1,
-                    "Coyote" : 2,
-                    "Wolf"   : 3
+STARVATION_RATES = {"Rabbit" : 2,
+                    "Coyote" : 4,
+                    "Wolf"   : 4
                     }
 
 # lists of foods for each herbivore

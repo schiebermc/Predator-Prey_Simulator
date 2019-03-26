@@ -30,7 +30,7 @@ class GifCreator:
         anim = FuncAnimation(
             fig, update, interval=100, frames=len(self.universe), repeat=False)
         if self.save:
-            anim.save(self.filename + '.html', fps=10, writer='imagemagick')
+            anim.save(self.filename + '.gif', fps=10, writer='imagemagick')
         plt.draw()
         plt.show()
 
