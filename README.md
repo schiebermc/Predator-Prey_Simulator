@@ -8,3 +8,4 @@ There are two separate simulators found in this repo, based on different concept
 
 ![](cellular_automaton/forest100by100.gif)
 ![](cellular_automaton/forest400by400.gif)
+![](cellular_automaton/forest600by600.gif)
